@@ -125,9 +125,15 @@ REVENANT is built spec-first with Kiro:
 - [x] Downloadable resurrection pack (`.kiro/specs/<repo>-resurrection/`)
 - [x] Property-based tests for score, dependency logic, and the pack generator
 - [ ] Dependency analysis via PyPI for Python repos
-- [ ] One real proof resurrection, documented before/after
-- [ ] Kiro Crew app in a separate public repo (Best Kiro Crew App bonus)
+- [x] One real proof resurrection, documented before/after —
+  [cferdinandi/gulp-boilerplate](proof/gulp-boilerplate-resurrection.md)
+  (REVENANT score 15/100; `npm install` failed on node-sass, after the fix the
+  full gulp build passes and `dist/` is produced; 2 hand-edited files, 3 lines)
+- [x] Kiro Crew app in a separate public repo (Best Kiro Crew App bonus) —
+  [Ajengayukusu/revenant-crew](https://github.com/Ajengayukusu/revenant-crew)
 - [ ] Demo video (< 3 min, YouTube public), blog post, social post
+
+**Live app:** https://ajengayukusu.github.io/revenant/
 
 ## License
 
