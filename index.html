@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>REVENANT — The Repo Resurrection Crew</title>
+  <meta name="description" content="Dead repos rise again. Paste a GitHub URL and REVENANT issues its Death Certificate and Resurrection Score.">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main class="page">
+    <header class="hero">
+      <p class="eyebrow">Kiroween 2026 · Resurrection</p>
+      <h1>REVENANT</h1>
+      <p class="tagline">Dead repos rise again. Paste a GitHub URL, and the crew
+        issues its Death Certificate — and its chance of resurrection.</p>
+    </header>
+
+    <section class="analyser" aria-labelledby="analyser-heading">
+      <h2 id="analyser-heading" class="visually-hidden">Analyse a repository</h2>
+      <form id="analyse-form" novalidate>
+        <label for="repo-url">GitHub repository URL</label>
+        <div class="input-row">
+          <input id="repo-url" name="repo-url" type="text" inputmode="url"
+                 autocomplete="off" spellcheck="false"
+                 placeholder="https://github.com/owner/repo"
+                 aria-describedby="form-hint">
+          <button id="analyse-btn" type="submit">Raise it</button>
+        </div>
+        <p id="form-hint" class="hint">Public repositories only. Example: https://github.com/facebook/react</p>
+      </form>
+
+      <p id="status" class="status" role="status" aria-live="polite"></p>
+      <div id="error" class="error" role="alert" hidden></div>
+
+      <article id="certificate" class="certificate" hidden>
+        <header class="certificate-header">
+          <h3>Death Certificate</h3>
+          <p class="certificate-sub">Issued by the REVENANT crew</p>
+        </header>
+        <h4 id="cert-repo-name" class="repo-name"></h4>
+        <p id="cert-description" class="repo-description"></p>
+
+        <div class="score-block">
+          <div class="score-number"><span id="cert-score">–</span><span class="score-max">/100</span></div>
+          <p class="score-label">Resurrection Score — <strong id="cert-verdict"></strong></p>
+          <div class="score-bar" aria-hidden="true"><div id="score-bar-fill" class="score-bar-fill"></div></div>
+        </div>
+
+        <dl class="facts">
+          <div><dt>Last push</dt><dd id="cert-last-push">–</dd></div>
+          <div><dt>Months since last push</dt><dd id="cert-months">–</dd></div>
+          <div><dt>Open issues</dt><dd id="cert-issues">–</dd></div>
+          <div><dt>Stars</dt><dd id="cert-stars">–</dd></div>
+          <div><dt>Archived</dt><dd id="cert-archived">–</dd></div>
+          <div><dt>Primary language</dt><dd id="cert-language">–</dd></div>
+        </dl>
+
+        <p class="formula-note">Score = 100 − recency penalty (2/month idle, max 60)
+          − archived penalty (25) − backlog penalty (1 per 20 open issues, max 15),
+          clamped to 0–100. Full formula: <code>score.js</code>.</p>
+
+        <section class="autopsy" aria-labelledby="autopsy-heading">
+          <h5 id="autopsy-heading">Dependency Autopsy</h5>
+          <p id="autopsy-status" class="autopsy-status">Opening the body…</p>
+          <dl class="facts" id="autopsy-facts" hidden>
+            <div><dt>Dependencies</dt><dd id="autopsy-total">–</dd></div>
+            <div><dt>Outdated</dt><dd id="autopsy-outdated">–</dd></div>
+            <div><dt>Dependency health</dt><dd id="autopsy-health">–</dd></div>
+          </dl>
+          <p id="autopsy-deprecated" class="autopsy-deprecated" hidden></p>
+          <p class="formula-note">The autopsy is a separate report — it does not
+            change the Resurrection Score above.</p>
+        </section>
+
+        <button id="pack-btn" class="pack-btn" type="button" disabled>Download Resurrection Pack</button>
+        <p class="formula-note">One Markdown file containing a ready-to-paste
+          <code>.kiro/specs/</code> resurrection spec for this repo.</p>
+      </article>
+    </section>
+
+    <footer class="footer">
+      <p>REVENANT is a Kiroween 2026 entry by Ajeng Ayu Kusuma Wardani.
+        Built with Kiro — specs, steering, hooks, and custom agents live in <code>/.kiro</code>.</p>
+    </footer>
+  </main>
+
+  <script src="score.js"></script>
+  <script src="deps.js"></script>
+  <script src="pack.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

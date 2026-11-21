@@ -1,0 +1,27 @@
+# REVENANT — .gitignore
+#
+# IMPORTANT — DO NOT IGNORE .kiro/
+# The Kiroween 2026 rules require the /.kiro directory (specs, hooks,
+# steering) to be present at the root of the public repo. Adding it to
+# .gitignore could disqualify the submission. The safeguard line below
+# (`!.kiro/`) is a reminder only — git cannot un-ignore files inside an
+# ignored directory — so the real protection is: never add a `.kiro`
+# pattern anywhere in this file.
+# Safeguard note (not an active ignore rule):
+#   !.kiro/
+
+# OS / editor noise
+.DS_Store
+Thumbs.db
+*.swp
+*~
+.idea/
+.vscode/*
+
+# Local tooling (none yet — the app itself has no build step)
+node_modules/
+
+# Local scratch / secrets — never commit these
+.env
+.env.*
+*.log

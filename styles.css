@@ -1,0 +1,132 @@
+/* REVENANT — cemetery UI: dark, polished, still readable and usable. */
+:root {
+  --bg: #0d0f14;
+  --surface: #161a22;
+  --surface-2: #1e232e;
+  --border: #2c3342;
+  --text: #e8e6df;
+  --muted: #9aa3b2;
+  --accent: #9be15d;
+  --accent-dim: #5c8a3a;
+  --danger: #ff7a7a;
+  --amber: #ffc857;
+  --radius: 12px;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: radial-gradient(1200px 600px at 50% -10%, #1c2333 0%, var(--bg) 55%);
+  color: var(--text);
+  font-family: Georgia, 'Times New Roman', serif;
+  line-height: 1.55;
+}
+
+.page { max-width: 760px; margin: 0 auto; padding: 3rem 1.25rem 4rem; }
+
+.visually-hidden {
+  position: absolute; width: 1px; height: 1px; overflow: hidden;
+  clip: rect(0 0 0 0); white-space: nowrap;
+}
+
+.hero { text-align: center; margin-bottom: 2.5rem; }
+.eyebrow {
+  letter-spacing: .22em; text-transform: uppercase; font-size: .75rem;
+  color: var(--accent); margin: 0 0 .5rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+.hero h1 { font-size: 3.2rem; letter-spacing: .12em; margin: 0; }
+.tagline { color: var(--muted); max-width: 34rem; margin: .75rem auto 0; }
+
+.analyser {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 1.75rem;
+}
+
+label { display: block; font-weight: bold; margin-bottom: .5rem; }
+.input-row { display: flex; gap: .6rem; flex-wrap: wrap; }
+input[type="text"] {
+  flex: 1 1 320px; padding: .7rem .9rem; border-radius: 8px;
+  border: 1px solid var(--border); background: var(--surface-2);
+  color: var(--text); font-size: 1rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+input[type="text"]:focus { outline: 2px solid var(--accent-dim); outline-offset: 1px; }
+button {
+  padding: .7rem 1.4rem; border-radius: 8px; border: 0; cursor: pointer;
+  background: var(--accent); color: #101408; font-size: 1rem; font-weight: bold;
+}
+button:disabled { opacity: .55; cursor: wait; }
+.hint { color: var(--muted); font-size: .85rem; margin: .5rem 0 0; }
+.status { color: var(--muted); min-height: 1.4em; margin: 1rem 0 0; }
+.error {
+  margin-top: 1rem; padding: .8rem 1rem; border-radius: 8px;
+  border: 1px solid var(--danger); color: var(--danger); background: rgba(255, 122, 122, .07);
+}
+
+/* Death Certificate — tombstone card */
+.certificate {
+  margin-top: 1.75rem; padding: 1.75rem;
+  background: linear-gradient(180deg, #20242e, #171a21);
+  border: 1px solid var(--border);
+  border-radius: 120px 120px var(--radius) var(--radius);
+  text-align: center;
+}
+.certificate.rise { animation: rise 0.7s ease-out; }
+@keyframes rise {
+  from { opacity: 0; transform: translateY(18px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .certificate.rise { animation: none; }
+}
+.certificate-header h3 {
+  margin: 0; letter-spacing: .18em; text-transform: uppercase; font-size: 1.05rem;
+}
+.certificate-sub { color: var(--muted); margin: .25rem 0 1rem; font-style: italic; }
+.repo-name {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 1.35rem; margin: 0; word-break: break-all;
+}
+.repo-description { color: var(--muted); margin: .4rem auto 0; max-width: 32rem; }
+
+.score-block { margin: 1.5rem 0; }
+.score-number { font-size: 3.4rem; font-weight: bold; line-height: 1; }
+.score-max { font-size: 1.3rem; color: var(--muted); }
+.score-label { margin: .35rem 0 .7rem; color: var(--muted); }
+.score-label strong { color: var(--text); }
+.score-bar {
+  height: 10px; border-radius: 999px; background: var(--surface-2);
+  border: 1px solid var(--border); overflow: hidden; max-width: 420px; margin: 0 auto;
+}
+.score-bar-fill {
+  height: 100%; width: 0; background: var(--accent); transition: width .6s ease;
+}
+.score-bar-fill[data-verdict="Fading"] { background: var(--amber); }
+.score-bar-fill[data-verdict="Dead"] { background: #ff9f5a; }
+.score-bar-fill[data-verdict="Fossilised"] { background: var(--danger); }
+
+.facts {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 1rem; margin: 0; text-align: left;
+}
+.facts div { background: var(--surface-2); border: 1px solid var(--border); border-radius: 8px; padding: .7rem .9rem; }
+.facts dt { color: var(--muted); font-size: .78rem; text-transform: uppercase; letter-spacing: .08em; }
+.facts dd { margin: .2rem 0 0; font-size: 1.05rem; }
+
+.formula-note { color: var(--muted); font-size: .82rem; margin: 1.4rem 0 0; }
+code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+
+/* Dependency Autopsy + Resurrection Pack */
+.autopsy { margin-top: 1.6rem; text-align: left; }
+.autopsy h5 {
+  margin: 0 0 .5rem; letter-spacing: .14em; text-transform: uppercase;
+  font-size: .9rem; text-align: center;
+}
+.autopsy-status { color: var(--muted); text-align: center; margin: 0 0 .8rem; }
+.autopsy-deprecated { color: var(--danger); margin: .8rem 0 0; word-break: break-word; }
+.pack-btn { margin-top: 1.4rem; background: var(--surface-2); color: var(--accent); border: 1px solid var(--accent-dim); }
+.pack-btn:disabled { opacity: .55; cursor: wait; }
+
+.footer { color: var(--muted); font-size: .85rem; text-align: center; margin-top: 2.5rem; }
