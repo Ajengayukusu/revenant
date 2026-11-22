@@ -73,6 +73,20 @@
             change the Resurrection Score above.</p>
         </section>
 
+        <section class="autopsy" id="pypi-autopsy-section" aria-labelledby="pypi-autopsy-heading" hidden>
+          <h5 id="pypi-autopsy-heading">Python Dependency Autopsy</h5>
+          <p id="pypi-autopsy-status" class="autopsy-status"></p>
+          <dl class="facts" id="pypi-autopsy-facts" hidden>
+            <div><dt>Dependencies</dt><dd id="pypi-autopsy-total">–</dd></div>
+            <div><dt>Outdated</dt><dd id="pypi-autopsy-outdated">–</dd></div>
+            <div><dt>Stale (&gt;36 months)</dt><dd id="pypi-autopsy-stale">–</dd></div>
+            <div><dt>Dependency health</dt><dd id="pypi-autopsy-health">–</dd></div>
+          </dl>
+          <p id="pypi-autopsy-stale-list" class="autopsy-deprecated" hidden></p>
+          <p class="formula-note">Python autopsy is a separate report — it does not
+            change the Resurrection Score above.</p>
+        </section>
+
         <button id="pack-btn" class="pack-btn" type="button" disabled>Download Resurrection Pack</button>
         <p class="formula-note">One Markdown file containing a ready-to-paste
           <code>.kiro/specs/</code> resurrection spec for this repo.</p>
@@ -87,6 +101,7 @@
 
   <script src="score.js"></script>
   <script src="deps.js"></script>
+  <script src="pypi.js"></script>
   <script src="pack.js"></script>
   <script src="app.js"></script>
 </body>

@@ -13,6 +13,7 @@
 
   var S = window.RevenantScore;
   var D = window.RevenantDeps;
+  var Py = window.RevenantPypi;
   var P = window.RevenantPack;
   var form = document.getElementById('analyse-form');
   var input = document.getElementById('repo-url');
@@ -211,6 +212,179 @@
       });
   }
 
+  // ---------- Python dependency autopsy (network) ----------
+
+  var MAX_PYPI_DEPS_CHECKED = 60; // same courtesy cap as npm
+
+  /**
+   * Fetch a raw file from a GitHub repo (requirements.txt or pyproject.toml).
+   * Tries raw.githubusercontent.com first; falls back to the contents API.
+   * Returns the file text or null.
+   */
+  function fetchRawPythonFile(owner, repo, defaultBranch, filename) {
+    var rawUrl = 'https://raw.githubusercontent.com/' + encodeURIComponent(owner) +
+      '/' + encodeURIComponent(repo) + '/' + encodeURIComponent(defaultBranch || 'HEAD') +
+      '/' + filename;
+    return fetch(rawUrl).then(function (res) {
+      if (res.ok) return res.text();
+      // Fall back to the GitHub contents API.
+      var apiUrl = 'https://api.github.com/repos/' + encodeURIComponent(owner) +
+        '/' + encodeURIComponent(repo) + '/contents/' + encodeURIComponent(filename);
+      return fetch(apiUrl, { headers: { 'Accept': 'application/vnd.github+json' } })
+        .then(function (apiRes) {
+          if (!apiRes.ok) return null;
+          return apiRes.json();
+        })
+        .then(function (body) {
+          if (!body || !body.content) return null;
+          try { return atob(body.content.replace(/\s/g, '')); } catch (e) { return null; }
+        });
+    }).catch(function () { return null; });
+  }
+
+  /**
+   * Fetch one package's info from PyPI.
+   * Returns { name, latestVersion, latestReleaseMonthsAgo } or null on 404/error.
+   */
+  function fetchPypiInfo(name) {
+    var url = 'https://pypi.org/pypi/' + encodeURIComponent(name) + '/json';
+    return fetch(url).then(function (res) {
+      if (res.status === 404) return null;
+      if (!res.ok) return null;
+      return res.json();
+    }).then(function (data) {
+      if (!data) return null;
+      var latestVersion = data.info && data.info.version ? data.info.version : null;
+      var latestReleaseMonthsAgo = null;
+      if (latestVersion && data.releases && data.releases[latestVersion]) {
+        var files = data.releases[latestVersion];
+        if (files.length > 0) {
+          // Use the earliest upload_time_iso_8601 among the files of that version.
+          var earliest = files.reduce(function (min, f) {
+            if (!f.upload_time_iso_8601) return min;
+            return (!min || f.upload_time_iso_8601 < min) ? f.upload_time_iso_8601 : min;
+          }, null);
+          if (earliest) {
+            var then = new Date(earliest).getTime();
+            var now = Date.now();
+            if (!isNaN(then) && now > then) {
+              latestReleaseMonthsAgo = Math.floor((now - then) / (1000 * 60 * 60 * 24 * 30.4375));
+            }
+          }
+        }
+      }
+      return { latestVersion: latestVersion, latestReleaseMonthsAgo: latestReleaseMonthsAgo };
+    }).catch(function () { return null; });
+  }
+
+  function renderPypiAutopsySection(show) {
+    var section = document.getElementById('pypi-autopsy-section');
+    section.hidden = !show;
+  }
+
+  function renderPypiAutopsyStatus(message) {
+    document.getElementById('pypi-autopsy-status').textContent = message || '';
+  }
+
+  function renderPypiAutopsy(deps, summary, truncated) {
+    renderPypiAutopsyStatus(
+      summary.total + ' dependenc' + (summary.total === 1 ? 'y' : 'ies') + ' found' +
+      (truncated ? ' (first ' + MAX_PYPI_DEPS_CHECKED + ' checked against PyPI)' : ', checked against PyPI') + '.'
+    );
+    document.getElementById('pypi-autopsy-total').textContent = String(summary.total);
+    document.getElementById('pypi-autopsy-outdated').textContent =
+      summary.outdated + ' (' + summary.outdatedPct + '% of checked)';
+    document.getElementById('pypi-autopsy-stale').textContent =
+      summary.stale + ' (' + summary.stalePct + '% of total)';
+    document.getElementById('pypi-autopsy-health').textContent =
+      summary.health != null ? summary.health + '/100' : '–';
+    document.getElementById('pypi-autopsy-facts').hidden = false;
+
+    // List stale packages by name.
+    var staleNames = deps.filter(function (d) { return d.stale; }).map(function (d) { return d.name; });
+    var staleEl = document.getElementById('pypi-autopsy-stale-list');
+    if (staleNames.length > 0) {
+      staleEl.textContent = 'Stale (>36 months): ' + staleNames.join(', ');
+      staleEl.hidden = false;
+    } else {
+      staleEl.hidden = true;
+    }
+  }
+
+  function runPypiAutopsy(repo, analysis) {
+    // Determine if this might be a Python repo.
+    var isPython = analysis.language === 'Python';
+
+    // Try requirements.txt first; if the repo is Python or if the file exists,
+    // proceed; fall back to pyproject.toml.
+    return fetchRawPythonFile(analysis.owner, analysis.repo, repo.default_branch, 'requirements.txt')
+      .then(function (reqText) {
+        if (reqText) {
+          return { text: reqText, source: 'requirements.txt', parser: Py.parseRequirementsTxt };
+        }
+        // No requirements.txt — try pyproject.toml.
+        return fetchRawPythonFile(analysis.owner, analysis.repo, repo.default_branch, 'pyproject.toml')
+          .then(function (pyText) {
+            if (pyText) {
+              return { text: pyText, source: 'pyproject.toml', parser: Py.parsePyprojectDependencies };
+            }
+            return null;
+          });
+      })
+      .then(function (found) {
+        if (!found) {
+          // No Python dependency file found.
+          if (isPython) {
+            // Python repo but no recognised dependency file.
+            renderPypiAutopsySection(true);
+            renderPypiAutopsyStatus('Python repository detected, but no requirements.txt or pyproject.toml found at the root — Python dependency autopsy skipped.');
+            document.getElementById('pypi-autopsy-facts').hidden = true;
+          }
+          // Non-Python repo with no Python files: stay hidden.
+          return;
+        }
+
+        var parsed = found.parser(found.text);
+        if (!parsed || parsed.length === 0) {
+          renderPypiAutopsySection(true);
+          renderPypiAutopsyStatus(found.source + ' found, but no dependencies declared — Python autopsy complete, nothing to examine.');
+          document.getElementById('pypi-autopsy-facts').hidden = true;
+          return;
+        }
+
+        // Show section and status.
+        renderPypiAutopsySection(true);
+        renderPypiAutopsyStatus('Examining ' + parsed.length + ' Python dependenc' +
+          (parsed.length === 1 ? 'y' : 'ies') + ' against PyPI…');
+        document.getElementById('pypi-autopsy-facts').hidden = true;
+
+        var slice = parsed.slice(0, MAX_PYPI_DEPS_CHECKED);
+        return Promise.all(slice.map(function (dep) {
+          return fetchPypiInfo(dep.name).then(function (info) {
+            var declaredMin = Py.extractMinVersion(dep.spec);
+            var latestVersion = info ? info.latestVersion : null;
+            var latestReleaseMonthsAgo = info ? info.latestReleaseMonthsAgo : null;
+            return Py.classifyPypiDependency({
+              name: dep.name,
+              declaredMin: declaredMin,
+              latestVersion: latestVersion,
+              latestReleaseMonthsAgo: latestReleaseMonthsAgo
+            });
+          });
+        })).then(function (classified) {
+          var summary = Py.summarisePypiDependencies(classified);
+          renderPypiAutopsy(classified, summary, parsed.length > slice.length);
+        });
+      })
+      .catch(function () {
+        // If the section is already visible, show the error; otherwise hide it.
+        var section = document.getElementById('pypi-autopsy-section');
+        if (!section.hidden) {
+          renderPypiAutopsyStatus('Python dependency autopsy could not be completed (network or registry error) — the certificate above still stands.');
+        }
+      });
+  }
+
   // ---------- Resurrection Pack download ----------
 
   packBtn.addEventListener('click', function () {
@@ -235,6 +409,8 @@
     cert.hidden = true;
     packBtn.disabled = true;
     lastAnalysis = null;
+    document.getElementById('pypi-autopsy-section').hidden = true;
+    document.getElementById('pypi-autopsy-facts').hidden = true;
 
     var parsed = S.parseRepoUrl(input.value);
     if (!parsed) {
@@ -267,7 +443,9 @@
         setStatus('');
         renderCertificate(repo, analysis);
         packBtn.disabled = false;
-        return runAutopsy(repo, analysis);
+        return runAutopsy(repo, analysis).then(function () {
+          return runPypiAutopsy(repo, analysis);
+        });
       })
       .catch(function (err) {
         setStatus('');

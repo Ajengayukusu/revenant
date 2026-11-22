@@ -20,7 +20,7 @@ resurrection spec so a developer can actually bring it back.
 3. It issues a **Death Certificate** showing: repo name, description, last
    push date, months since last push, open issues, stars, archived status,
    primary language — and a **Resurrection Score**.
-4. **Dependency Autopsy** — it then fetches the repo's `package.json`
+4. **npm Dependency Autopsy** — it then fetches the repo's `package.json`
    (raw URL, falling back to the GitHub contents API) and checks each
    dependency against the npm registry: latest version, outdated status,
    and deprecated flags. The certificate gains an Autopsy section with
@@ -28,7 +28,17 @@ resurrection spec so a developer can actually bring it back.
    dependency health figure. Repos without a `package.json` are handled
    gracefully ("dependency autopsy skipped"). The autopsy is a separate
    report — **it does not change the Resurrection Score** (see below).
-5. **Resurrection Pack** — the "Download Resurrection Pack" button
+5. **Python Dependency Autopsy** — when the repo is a Python project (primary
+   language is Python, or a `requirements.txt`/`pyproject.toml` exists at the
+   root), REVENANT reads its declared dependencies and checks each against the
+   PyPI registry: latest version, months since the latest release, outdated
+   status, and a stale flag for packages with no release in over 36 months. The
+   certificate gains a separate "Python Dependency Autopsy" section showing
+   total dependencies, outdated count, stale count, and a dependency health
+   figure. Repos without Python dependency files get no Python section at all.
+   Like the npm autopsy, this is a separate report — **it does not change the
+   Resurrection Score**.
+6. **Resurrection Pack** — the "Download Resurrection Pack" button
    generates, entirely client-side, one Markdown file containing a
    ready-to-paste Kiro spec (`.kiro/specs/<repo>-resurrection/` with
    requirements, design, and tasks) tailored with the repo's real data,
@@ -71,29 +81,36 @@ Requires Node.js (uses the built-in `node:test` runner — nothing to install):
 node --test tests/*.test.js
 ```
 
-That runs all four suites (32 tests): `score.test.js` (score formula),
-`deps.test.js` (dependency logic), `pack.test.js` (pack generator), and
+That runs all five suites (70 tests): `score.test.js` (score formula),
+`deps.test.js` (dependency logic), `pack.test.js` (pack generator),
 `property.test.js` (property-based tests — a dependency-free seeded PRNG
 harness, 250 generated cases per property: score always an integer
 0–100, more idle time / archiving never raises the score, deprecated
 dependencies never improve dependency health, and the generated pack
-always contains the repo name, the score, and all three spec sections).
+always contains the repo name, the score, and all three spec sections),
+and `pypi.test.js` (Python dependency parsing, classification, stale
+boundary, and summary invariants).
 
 ## Project structure
 
 ```
 index.html      The single page: analyser form + Death Certificate card
-                (with Dependency Autopsy section + pack download button)
+                (with npm and Python Dependency Autopsy sections +
+                pack download button)
 app.js          Browser wiring + ALL network access: GitHub API,
-                package.json fetch, npm registry checks, pack download
+                package.json fetch, npm registry checks,
+                requirements.txt/pyproject.toml fetch, PyPI checks,
+                pack download
 score.js        Pure logic (URL parsing, repo age, Resurrection Score).
                 Browser-global in the page, require()-able in Node tests.
-deps.js         Pure dependency logic (version compare, outdated
+deps.js         Pure npm dependency logic (version compare, outdated
                 classification, package.json parsing, health summary)
+pypi.js         Pure Python dependency logic (requirements.txt and
+                pyproject.toml parsing, PyPI classification, health summary)
 pack.js         Pure Resurrection Pack generator ({filename, content})
 styles.css      Cemetery UI: dark, tombstone-styled certificate, accessible
-tests/          node:test suites for score.js, deps.js, pack.js, plus
-                dependency-free property-based tests
+tests/          node:test suites for score.js, deps.js, pypi.js, pack.js,
+                plus dependency-free property-based tests
 .kiro/          Kiro specs, steering, hooks, and custom agent definitions
                 (REQUIRED by the Kiroween rules — never gitignore this)
 ```
@@ -124,7 +141,7 @@ REVENANT is built spec-first with Kiro:
 - [x] Dependency analysis via the npm registry (outdated %, deprecated list)
 - [x] Downloadable resurrection pack (`.kiro/specs/<repo>-resurrection/`)
 - [x] Property-based tests for score, dependency logic, and the pack generator
-- [ ] Dependency analysis via PyPI for Python repos
+- [x] Dependency analysis via PyPI for Python repos
 - [x] One real proof resurrection, documented before/after —
   [cferdinandi/gulp-boilerplate](proof/gulp-boilerplate-resurrection.md)
   (REVENANT score 15/100; `npm install` failed on node-sass, after the fix the
